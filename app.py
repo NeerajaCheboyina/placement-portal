@@ -14,11 +14,6 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 db.init_app(app)
 
-with app.app_context():
-    db.create_all()
-
-
-
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
@@ -726,19 +721,28 @@ def company_register():
 
 
 # ---------------- MAIN ----------------
+# ---------------- CREATE DATABASE & DEFAULT ADMIN ----------------
+with app.app_context():
+
+    db.create_all()
+
+    existing_admin = User.query.filter_by(email="admin@mail.com").first()
+
+    if not existing_admin:
+
+        admin_user = User(
+            email="admin@mail.com",
+            password="admin123",
+            role="admin",
+            status="Active"
+        )
+
+        db.session.add(admin_user)
+        db.session.commit()
+
+        print("Default Admin Created")
+
+
+# ---------------- MAIN ----------------
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-
-        # Create default admin if not exists
-        if not User.query.filter_by(role="admin").first():
-            admin_user = User(
-                email="admin@mail.com",
-                password="admin123",
-                role="admin"
-            )
-            db.session.add(admin_user)
-            db.session.commit()
-            print("Default Admin Created")
-
     app.run(debug=True)
